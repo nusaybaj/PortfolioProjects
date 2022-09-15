@@ -78,6 +78,7 @@ order by 2 desc
 Select Location, max(cast(Total_Deaths as int)) as DeathCount
 from PortfolioProject..CovidDeaths
 where continent is null -- the greatest difference is this line of code
+and location not in ('World', 'European Union', 'International')
 group by location, population
 order by 2 desc
 
@@ -86,6 +87,7 @@ Create view DeathPercentage as
 Select Location,  max((cast(total_deaths as int))/population)*100 as DeathPercentage
 from PortfolioProject..CovidDeaths
 where continent is null
+and location not in ('World', 'European Union', 'International')
 group by location, population
 
 
@@ -99,8 +101,8 @@ where location = 'World'
 order by 1,2
 
 -- Cumulative death percentage as of now:
-Select sum(Total_Cases) as Total_Cases, sum(cast(Total_Deaths as int)) as Total_Deaths,
-(sum(cast(total_deaths as int))/sum(total_cases))*100 as DeathPercentage
+Select sum(New_Cases) as Total_Cases, sum(cast(New_Deaths as int)) as Total_Deaths,
+(sum(cast(new_deaths as int))/sum(new_cases))*100 as DeathPercentage
 from PortfolioProject..CovidDeaths
 where location = 'World'
 order by 1,2
@@ -121,8 +123,8 @@ group by date
 order by 1,2
 
 -- Death percentage per new case
-Select Date, sum(New_Cases) as Sum_NewCases , sum(cast(Total_Deaths as int)) as Total_Deaths,
-(sum(cast(total_deaths as int))/sum(new_cases))*100 as DeathPercentage
+Select Date, sum(New_Cases) as Total_Cases , sum(cast(New_Deaths as int)) as Total_Deaths,
+(sum(cast(new_deaths as int))/sum(new_cases))*100 as DeathPercentage
 from PortfolioProject..CovidDeaths
 where continent is not null
 group by date
@@ -140,9 +142,9 @@ on dea.location = vac.location
 and dea.date = vac.date
 
 -- Looking at total population vs vaccinations:
--- note: people_vaccinated dtype is nvarchar
-Select dea.Continent, dea.Location, dea.Date, dea.Population, cast(vac.People_Vaccinated as int), 
-(cast(vac.people_vaccinated as int)/dea.population)*100 as VaccinatedPercentage
+-- note: new_vaccinations dtype is nvarchar
+Select dea.Continent, dea.Location, dea.Date, dea.Population, convert(int, vac.new_vaccinations), 
+(convert(int, vac.new_vaccinations)/dea.population)*100 as VaccinatedPercentage
 from PortfolioProject..CovidDeaths as dea
 join PortfolioProject..CovidVaccinations as vac
 on dea.location = vac.location
@@ -221,8 +223,6 @@ where dea.continent is not null
 
 Select * , (Cummulative_New_Vaccinations/Population)*100 
 as VaccinatedPercentage from #PercentPopulationVaccinated
-
-
 
 
 
