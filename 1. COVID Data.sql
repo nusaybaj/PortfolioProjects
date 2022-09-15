@@ -27,7 +27,7 @@ Select Location, Date, Total_Cases, Total_Deaths,
 from PortfolioProject..CovidDeaths
 where location like '%kingdom%'
 order by 1,2
--- shows the likelihood of dying friom COVID in UK 
+-- shows the likelihood of dying from COVID in UK 
 
 -- Lookating at total cases vs population:
 Select Location, Date, Total_Cases, Population,
@@ -37,20 +37,15 @@ where location like '%kingdom%'
 order by 1,2
 -- shows the likelihood of contracting COVID in UK
 
--- Countries with the highest infection count:
-Select Location, Population, max(Total_Cases) as HighestInfectionCount
-from PortfolioProject..CovidDeaths
-where continent is not null
-group by location, population
-order by 3 desc
 
--- Countries with the highest infection rates:
+-- Countries with the highest infection count and rates:
 Select Location, Population, max(Total_Cases) as HighestInfectionCount, 
 max((total_cases/population))*100 as InfectionRate
 from PortfolioProject..CovidDeaths
 where continent is not null
 group by location, population
 order by 4 desc
+
 
 -- Countries with the highest death count:
 -- total_deaths current dtype is nvarchar and needs to be convereted to an integer
@@ -68,12 +63,14 @@ where continent is not null
 group by location, population
 order by 2 desc
 
+
 -- Only European Countries:
 Select Location, max(cast(Total_Deaths as int)) as DeathCount
 from PortfolioProject..CovidDeaths
 where continent = 'Europe'
 group by location, population
 order by 2 desc
+
 
 -- BY CONTININET
 
@@ -153,6 +150,20 @@ and dea.date = vac.date
 where dea.continent is not null
 order by 1,2,3
 
+
+-- Looking at only current vaccinated percentage:
+Select dea.Location, dea.Population,
+sum(convert(int, vac.new_vaccinations)) as New_Vaccinated, 
+(sum(convert(int, vac.new_vaccinations))/population)*100 as Newly_Vaccinated_Percentage
+from PortfolioProject..CovidDeaths as dea
+join PortfolioProject..CovidVaccinations as vac
+on dea.location = vac.location
+and dea.date = vac.date
+where dea.continent is not null
+group by dea.location, dea.population
+order by 1
+
+
 -- New Vaccinations Rollover:
 -- create a CTE
 With PopvsVac (Continent, Location, Date, Population, New_Vaccinations, Cummulative_New_Vaccinations)
@@ -173,6 +184,7 @@ where dea.continent is not null
 Select * , (Cummulative_New_Vaccinations/Population)*100 
 as VaccinatedPercentage from PopvsVac
 
+
 -- Creating View for later visualisation:
 Create view PercentPopulationVaccinated as 
 Select dea.Continent, dea.Location, dea.Date, dea.Population, vac.New_Vaccinations,
@@ -184,18 +196,6 @@ on dea.location = vac.location
 and dea.date = vac.date
 where dea.continent is not null
 
-
--- Looking at only current vaccinated percentage:
-Select dea.Location, dea.Population,
-sum(convert(int, vac.new_vaccinations)) as New_Vaccinated, 
-(sum(convert(int, vac.new_vaccinations))/population)*100 as Newly_Vaccinated_Percentage
-from PortfolioProject..CovidDeaths as dea
-join PortfolioProject..CovidVaccinations as vac
-on dea.location = vac.location
-and dea.date = vac.date
-where dea.continent is not null
-group by dea.location, dea.population
-order by 1
 
 
 -- TEMP Table
@@ -221,6 +221,9 @@ where dea.continent is not null
 
 Select * , (Cummulative_New_Vaccinations/Population)*100 
 as VaccinatedPercentage from #PercentPopulationVaccinated
+
+
+
 
 
 
